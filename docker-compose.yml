@@ -1,0 +1,20 @@
+# Docker Compose file for the BioSamples MCP server
+# Run with: docker-compose up --build
+
+version: "3.9"
+
+services:
+  # The main MCP server service
+  biosamples-mcp:
+    # Build from the Dockerfile in the current directory
+    build: .
+
+    # Map host port 8000 to container port 8000
+    ports:
+      - "8000:8000"
+
+    # Load environment variables from .env file (copy from .env.example)
+    env_file: .env
+
+    # Restart automatically unless we explicitly stop it
+    restart: unless-stopped

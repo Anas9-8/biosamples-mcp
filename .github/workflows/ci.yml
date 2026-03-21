@@ -1,0 +1,40 @@
+# GitHub Actions CI pipeline for biosamples-mcp
+# Runs on every push and pull request to main to catch regressions early
+
+name: CI
+
+on:
+  # Run on direct pushes to main
+  push:
+    branches: [main]
+  # Also run on pull requests targeting main
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    # Use the latest Ubuntu runner
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up Python 3.11 — matches our Dockerfile and local dev environment
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Install all project dependencies from requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Run the test suite with verbose output so failures are easy to read
+      - name: Run tests
+        run: pytest tests/ -v
+
+      # Lint the source code with ruff — fast Python linter
+      - name: Lint with ruff
+        run: ruff check src/
