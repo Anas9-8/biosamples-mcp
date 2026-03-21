@@ -1,0 +1,49 @@
+# Project metadata and tool configuration for biosamples-mcp
+# This file replaces scattered config across setup.py, setup.cfg, and pytest.ini
+
+[project]
+# Package name as it would appear on PyPI
+name = "biosamples-mcp"
+
+# Current version — bump this when releasing
+version = "1.0.0"
+
+# Short description for package indexes
+description = "MCP server exposing EMBL-EBI BioSamples API as AI-callable tools"
+
+# Minimum Python version — we use 3.11 features like list[dict] type hints
+requires-python = ">=3.11"
+
+# Core runtime dependencies (mirrors requirements.txt for editable installs)
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "httpx",
+    "pydantic",
+    "mcp",
+    "python-dotenv",
+]
+
+[tool.pytest.ini_options]
+# Auto mode means every async test function runs without needing @pytest.mark.asyncio
+asyncio_mode = "auto"
+
+# Show short test summary info for failures and errors
+addopts = "-v"
+
+# Only look for tests in the tests/ directory
+testpaths = ["tests"]
+
+[tool.ruff]
+# Check all Python files in the source directory
+include = ["src/**/*.py"]
+
+# Target Python 3.11 for linting rules
+target-version = "py311"
+
+[tool.ruff.lint]
+# E = pycodestyle errors, F = pyflakes, I = isort
+select = ["E", "F", "I"]
+
+# E501 is line-too-long — we allow longer lines for readability in comments
+ignore = ["E501"]

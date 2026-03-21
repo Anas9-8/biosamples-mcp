@@ -1,11 +1,23 @@
-# MCP server for BioSamples — exposes three AI-callable tools via FastAPI
-# Implements the Model Context Protocol so LLM agents can query BioSamples
+# REST API server for BioSamples — HTTP interface for curl, Docker, and web clients
+# For real MCP clients (Claude Desktop, Cursor), use src/mcp_server.py instead
 # Start with: uvicorn src.server:app --reload
 
+import httpx
 from fastapi import FastAPI, HTTPException
-from src.tools.search_tool import TOOL_NAME as SEARCH_NAME, TOOL_DESCRIPTION as SEARCH_DESC, TOOL_SCHEMA as SEARCH_SCHEMA, run_search_tool
-from src.tools.fetch_tool import TOOL_NAME as FETCH_NAME, TOOL_DESCRIPTION as FETCH_DESC, TOOL_SCHEMA as FETCH_SCHEMA, run_fetch_tool
-from src.tools.submit_tool import TOOL_NAME as SUBMIT_NAME, TOOL_DESCRIPTION as SUBMIT_DESC, TOOL_SCHEMA as SUBMIT_SCHEMA, run_submit_tool
+from pydantic import ValidationError
+
+from src.tools.fetch_tool import TOOL_DESCRIPTION as FETCH_DESC
+from src.tools.fetch_tool import TOOL_NAME as FETCH_NAME
+from src.tools.fetch_tool import TOOL_SCHEMA as FETCH_SCHEMA
+from src.tools.fetch_tool import run_fetch_tool
+from src.tools.search_tool import TOOL_DESCRIPTION as SEARCH_DESC
+from src.tools.search_tool import TOOL_NAME as SEARCH_NAME
+from src.tools.search_tool import TOOL_SCHEMA as SEARCH_SCHEMA
+from src.tools.search_tool import run_search_tool
+from src.tools.submit_tool import TOOL_DESCRIPTION as SUBMIT_DESC
+from src.tools.submit_tool import TOOL_NAME as SUBMIT_NAME
+from src.tools.submit_tool import TOOL_SCHEMA as SUBMIT_SCHEMA
+from src.tools.submit_tool import run_submit_tool
 
 # Create the FastAPI application instance
 app = FastAPI(
@@ -76,8 +88,29 @@ async def call_tool(tool_name: str, arguments: dict):
     # Get the handler function for this tool
     handler = TOOL_HANDLERS[tool_name]
 
-    # Await the async handler with the caller's arguments
-    result = await handler(arguments)
+    # Run the tool inside a try/except so any error becomes a clean JSON response
+    try:
+        # Await the async handler with the caller's arguments
+        result = await handler(arguments)
+
+    except ValidationError as exc:
+        # Pydantic rejected the input — tell the caller exactly what's wrong
+        raise HTTPException(status_code=422, detail=exc.errors())
+
+    except httpx.HTTPStatusError as exc:
+        # The BioSamples API returned an error (e.g. 404 for bad accession)
+        raise HTTPException(
+            status_code=exc.response.status_code,
+            detail=str(exc),
+        )
+
+    except ValueError as exc:
+        # Something like a missing AAP_TOKEN — bad request from the caller's side
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    except Exception as exc:
+        # Catch-all for unexpected errors — log the message without leaking a stack trace
+        raise HTTPException(status_code=500, detail=f"Tool error: {str(exc)}")
 
     # Wrap the result in a standard response envelope
     return {"tool": tool_name, "result": result}

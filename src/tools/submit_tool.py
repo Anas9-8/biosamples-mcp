@@ -3,9 +3,9 @@
 # Requires a valid AAP Bearer token — the agent must include it in the environment
 
 import os
+
 from src.biosamples_client import submit_sample
 from src.models.sample import SubmitSampleRequest
-
 
 # Tool name as registered in the MCP schema
 TOOL_NAME = "submit_biosample"

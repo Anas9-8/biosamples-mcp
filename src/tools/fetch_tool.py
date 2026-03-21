@@ -4,7 +4,6 @@
 
 from src.biosamples_client import get_sample
 
-
 # Tool name registered in the MCP schema
 TOOL_NAME = "fetch_biosample"
 

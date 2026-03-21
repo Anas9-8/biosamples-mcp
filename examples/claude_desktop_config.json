@@ -1,0 +1,21 @@
+{
+  "_comment": "Add this block inside the 'mcpServers' key of your Claude Desktop config.",
+  "_comment2": "Claude Desktop config lives at:",
+  "_comment3": "  macOS:   ~/Library/Application Support/Claude/claude_desktop_config.json",
+  "_comment4": "  Windows: %APPDATA%\\Claude\\claude_desktop_config.json",
+  "_comment5": "After editing, restart Claude Desktop — the tools appear automatically.",
+
+  "mcpServers": {
+    "biosamples": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "src.mcp_server"
+      ],
+      "cwd": "/absolute/path/to/biosamples-mcp",
+      "env": {
+        "AAP_TOKEN": "your_ebi_aap_token_here_only_needed_for_submit"
+      }
+    }
+  }
+}

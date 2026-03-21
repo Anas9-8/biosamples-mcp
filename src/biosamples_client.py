@@ -2,9 +2,9 @@
 # Real accessions used throughout for testing: SAMEA112654119 (human tissue),
 # SAMN39198001 (pathogen), SAMEA7997453 (COVID-19 related sample)
 
-import httpx
 from typing import Optional
 
+import httpx
 
 # Base URL for the public BioSamples API
 BIOSAMPLES_BASE_URL = "https://www.ebi.ac.uk/biosamples"

@@ -4,7 +4,6 @@
 
 from src.biosamples_client import search_samples
 
-
 # Tool name as it appears in the MCP schema — agents reference this string
 TOOL_NAME = "search_biosamples"
 
