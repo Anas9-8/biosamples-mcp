@@ -1,0 +1,6 @@
+{
+  "name": "BioSamples Minimum Information Checklist",
+  "required": ["organism", "taxon_id"],
+  "recommended": ["tissue", "disease", "collection_date", "geographic_location"],
+  "optional": ["age", "sex", "additional_metadata"]
+}

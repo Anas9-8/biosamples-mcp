@@ -46,4 +46,5 @@ target-version = "py311"
 select = ["E", "F", "I"]
 
 # E501 is line-too-long — we allow longer lines for readability in comments
-ignore = ["E501"]
+# E402 is module-level import not at top — we call load_dotenv() before tool imports intentionally
+ignore = ["E501", "E402"]

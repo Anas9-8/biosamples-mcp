@@ -92,6 +92,65 @@ pytest tests/ -v
 ruff check src/
 ```
 
+## Advanced Features
+
+### AI-Assisted Submission
+
+Describe a sample in plain English — the server extracts organism, tissue, disease, location,
+and collection date automatically, validates against BioSamples checklists, and asks targeted
+clarification questions for any missing required fields before submitting.
+
+```bash
+# Step 1 — describe the sample in plain English
+curl -X POST http://localhost:8000/tools/smart_submit_biosample/call \
+  -H "Content-Type: application/json" \
+  -d '{"description": "Human liver biopsy from London 2023 with cirrhosis", "checklist": "human_sample"}'
+
+# Response (if a field is missing):
+# {"status": "needs_clarification", "questions": ["What is the donor sex? (male/female/unknown)"]}
+
+# Step 2 — provide the clarification answers
+curl -X POST http://localhost:8000/tools/smart_submit_biosample/call \
+  -H "Content-Type: application/json" \
+  -d '{"description": "Human liver biopsy from London 2023 with cirrhosis", "checklist": "human_sample", "clarifications": {"sex": "male"}}'
+
+# Response (on success):
+# {"status": "submitted", "accession": "SAMEA...", "message": "Sample successfully submitted to EMBL-EBI BioSamples"}
+```
+
+### Natural Language Search
+
+Search BioSamples using plain English — the server automatically extracts structured filters
+(organism, disease, tissue, location) from your query and shows you what it interpreted.
+
+```bash
+curl -X POST http://localhost:8000/tools/natural_search_biosamples/call \
+  -H "Content-Type: application/json" \
+  -d '{"query": "human blood samples Germany diabetes 2022"}'
+
+# Response includes interpreted filters alongside the results:
+# {"query_interpreted_as": {"organism": "Homo sapiens", "disease": "diabetes", ...}, "results": [...]}
+```
+
+### Checklist Validation
+
+Two JSON checklists in `checklists/` define which fields are required vs recommended:
+
+| Checklist | Required fields |
+|-----------|----------------|
+| `default` | organism, taxon_id |
+| `human_sample` | organism, taxon_id, tissue, collection_date |
+
+### Updated Tool Table
+
+| Tool | Description | Required Input |
+|------|-------------|----------------|
+| `search_biosamples` | Search by keyword with optional filters | `query: str` |
+| `fetch_biosample` | Get full metadata for a known accession | `accession: str` |
+| `submit_biosample` | Submit a new sample (requires AAP token) | Sample fields + env token |
+| `smart_submit_biosample` | Submit from plain English description | `description: str` |
+| `natural_search_biosamples` | Search using plain English query | `query: str` |
+
 ## Tech Stack
 
 - **Python 3.11** — type hints throughout, modern async patterns

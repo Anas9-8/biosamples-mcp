@@ -14,10 +14,18 @@ from src.tools.fetch_tool import TOOL_DESCRIPTION as FETCH_DESC
 from src.tools.fetch_tool import TOOL_NAME as FETCH_NAME
 from src.tools.fetch_tool import TOOL_SCHEMA as FETCH_SCHEMA
 from src.tools.fetch_tool import run_fetch_tool
+from src.tools.natural_search_tool import TOOL_DESCRIPTION as NAT_SEARCH_DESC
+from src.tools.natural_search_tool import TOOL_NAME as NAT_SEARCH_NAME
+from src.tools.natural_search_tool import TOOL_SCHEMA as NAT_SEARCH_SCHEMA
+from src.tools.natural_search_tool import run_natural_search_tool
 from src.tools.search_tool import TOOL_DESCRIPTION as SEARCH_DESC
 from src.tools.search_tool import TOOL_NAME as SEARCH_NAME
 from src.tools.search_tool import TOOL_SCHEMA as SEARCH_SCHEMA
 from src.tools.search_tool import run_search_tool
+from src.tools.smart_submit_tool import TOOL_DESCRIPTION as SMART_SUBMIT_DESC
+from src.tools.smart_submit_tool import TOOL_NAME as SMART_SUBMIT_NAME
+from src.tools.smart_submit_tool import TOOL_SCHEMA as SMART_SUBMIT_SCHEMA
+from src.tools.smart_submit_tool import run_smart_submit_tool
 from src.tools.submit_tool import TOOL_DESCRIPTION as SUBMIT_DESC
 from src.tools.submit_tool import TOOL_NAME as SUBMIT_NAME
 from src.tools.submit_tool import TOOL_SCHEMA as SUBMIT_SCHEMA
@@ -52,6 +60,20 @@ REGISTERED_TOOLS = [
         "description": SUBMIT_DESC,
         "schema": SUBMIT_SCHEMA,
         "handler": run_submit_tool,
+    },
+    {
+        # Smart submit tool — extracts metadata from plain text then submits
+        "name": SMART_SUBMIT_NAME,
+        "description": SMART_SUBMIT_DESC,
+        "schema": SMART_SUBMIT_SCHEMA,
+        "handler": run_smart_submit_tool,
+    },
+    {
+        # Natural language search tool — parses English query into structured filters
+        "name": NAT_SEARCH_NAME,
+        "description": NAT_SEARCH_DESC,
+        "schema": NAT_SEARCH_SCHEMA,
+        "handler": run_natural_search_tool,
     },
 ]
 

@@ -13,8 +13,10 @@ load_dotenv()
 
 from src.tools.fetch_tool import run_fetch_tool
 
-# Import the tool logic we already wrote — no need to duplicate it
+# Import the tool logic we already wrote — no need to duplicate it here
+from src.tools.natural_search_tool import run_natural_search_tool
 from src.tools.search_tool import run_search_tool
+from src.tools.smart_submit_tool import run_smart_submit_tool
 from src.tools.submit_tool import run_submit_tool
 
 # Create the FastMCP server instance — the name shows up in Claude Desktop
@@ -98,6 +100,45 @@ async def submit_biosample(
 
     # Delegate to the submit handler which reads AAP_TOKEN from the environment
     return await run_submit_tool(arguments)
+
+
+@mcp.tool()
+async def smart_submit_biosample(
+    description: str,
+    checklist: str = "default",
+    clarifications: dict = None,
+) -> dict:
+    """Submit a sample using a plain English description — no need to fill in every field manually.
+
+    Extracts organism, tissue, disease, date, and location from free text.
+    Returns clarification questions if required fields are missing, then submits
+    once all required information is collected. Requires AAP_TOKEN in the environment.
+    Example: smart_submit_biosample('Human liver biopsy from London 2023 with cirrhosis')
+    """
+
+    # Build the arguments dict the smart submit handler expects
+    arguments = {"description": description, "checklist": checklist}
+
+    # Only include clarifications if the caller actually passed them
+    if clarifications:
+        arguments["clarifications"] = clarifications
+
+    # Delegate to the handler that combines NLP parser + validator + submit
+    return await run_smart_submit_tool(arguments)
+
+
+@mcp.tool()
+async def natural_search_biosamples(query: str) -> dict:
+    """Search BioSamples using plain English — no API syntax required.
+
+    Automatically parses the query to extract organism, disease, tissue, and
+    location filters, then runs the structured BioSamples search.
+    Returns interpreted filters alongside the results for transparency.
+    Example: natural_search_biosamples('human blood samples Germany diabetes 2022')
+    """
+
+    # Pass the query through to the natural search handler
+    return await run_natural_search_tool({"query": query})
 
 
 # When run directly, start the stdio transport that MCP clients connect to

@@ -1,0 +1,6 @@
+{
+  "name": "Human Sample Checklist",
+  "required": ["organism", "taxon_id", "tissue", "collection_date"],
+  "recommended": ["disease", "geographic_location", "age", "sex"],
+  "optional": ["additional_metadata"]
+}
