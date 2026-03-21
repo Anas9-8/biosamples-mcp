@@ -1,8 +1,30 @@
 # biosamples-mcp
 
-![Python 3.11](https://img.shields.io/badge/python-3.11-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-green) ![MCP](https://img.shields.io/badge/MCP-enabled-purple) ![Docker](https://img.shields.io/badge/docker-ready-blue) ![BioSamples API](https://img.shields.io/badge/BioSamples-EBI-orange)
+![Python 3.11](https://img.shields.io/badge/python-3.11-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-green) ![MCP](https://img.shields.io/badge/MCP-enabled-purple) ![Docker](https://img.shields.io/badge/docker-ready-blue) ![BioSamples API](https://img.shields.io/badge/BioSamples-EBI-orange) ![Streamlit](https://img.shields.io/badge/Streamlit-UI-red)
 
 A production-ready MCP (Model Context Protocol) server that makes the EMBL-EBI BioSamples database queryable by AI agents. Point an LLM at this server and it can search millions of biological samples, fetch rich metadata, and submit new samples — all through a clean tool interface.
+
+## Web Interface
+
+A professional Streamlit UI provides a visual interface for all 5 MCP tools — useful for demos, interviews, and exploring the BioSamples database without writing any code.
+
+### Quick Start with UI
+
+```bash
+# Terminal 1: Start the MCP REST server
+export $(cat .env) && uvicorn src.server:app --reload
+
+# Terminal 2: Start the Streamlit UI
+streamlit run ui/app.py
+```
+
+Open http://localhost:8501 in your browser.
+
+The UI includes four pages:
+- **Search Samples** — keyword search with clickable result links
+- **Fetch Sample** — full metadata view for any accession
+- **AI-Assisted Submission** — plain-text description → automatic extraction → clarification → submission
+- **Natural Language Search** — plain English query → interpreted filters → structured results
 
 ## Inspiration
 

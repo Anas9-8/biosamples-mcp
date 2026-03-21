@@ -47,45 +47,35 @@ async def run_natural_search_tool(arguments: dict) -> dict:
     # Grab just the fields the parser found
     extracted = parse_result["extracted"]
 
-    # Build the search query string from the most informative fields we found
+    # Build a plain text query string from the extracted fields
+    # The BioSamples API only works reliably with the text= parameter —
+    # structured attr filters are ignored and return 0 results in practice
     query_parts = []
 
-    # Add organism to the text query if we identified it
+    # Organism goes first — it's the most selective term
     if "organism" in extracted:
         query_parts.append(extracted["organism"])
 
-    # Add disease to the text query if we found one
-    if "disease" in extracted:
-        query_parts.append(extracted["disease"])
-
-    # Add tissue type to the text query if present
+    # Tissue narrows down the result set after organism
     if "tissue" in extracted:
         query_parts.append(extracted["tissue"])
 
-    # Fall back to the original query if we couldn't extract any structured fields
+    # Disease adds further specificity if the user mentioned one
+    if "disease" in extracted:
+        query_parts.append(extracted["disease"])
+
+    # Join all extracted terms into one space-separated query string
     search_text = " ".join(query_parts) if query_parts else query
 
-    # Build the filter dict for structured attribute filtering in BioSamples
-    filters = {}
+    # Run the primary search with the combined text query — no filters
+    raw_results = await search_samples(query=search_text)
 
-    # Add organism filter if we recognized the organism
-    if "organism" in extracted:
-        filters["organism"] = extracted["organism"]
-
-    # Add disease filter — note BioSamples uses "disease or disorder" as attribute name
-    if "disease" in extracted:
-        filters["disease or disorder"] = extracted["disease"]
-
-    # Add tissue filter if we found a tissue type
-    if "tissue" in extracted:
-        filters["tissue"] = extracted["tissue"]
-
-    # Call the BioSamples API with our structured query and filters
-    raw_results = await search_samples(
-        query=search_text,
-        # Pass None instead of an empty dict so the client skips the filter params
-        filters=filters if filters else None,
-    )
+    # If the combined query returned nothing, fall back to the first term alone
+    if not raw_results:
+        # Use the first extracted term, or the first word of the original query
+        fallback = query_parts[0] if query_parts else query.split()[0]
+        # Retry with just that single term — broad enough to always get results
+        raw_results = await search_samples(query=fallback)
 
     # Normalize each result into a clean summary dict
     normalized = []

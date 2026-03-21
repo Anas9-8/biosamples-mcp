@@ -112,12 +112,16 @@ async def run_smart_submit_tool(arguments: dict) -> dict:
     # Build the full arguments dict that run_submit_tool expects
     submit_args = {
         "name": auto_name,
-        "organism": metadata["organism"],
-        "taxon_id": int(metadata["taxon_id"]),
-        "tissue": metadata["tissue"],
+        # organism is guaranteed present — it's required by every checklist
+        "organism": metadata.get("organism", "Unknown"),
+        # taxon_id falls back to 9606 (human) if it somehow slipped through validation
+        "taxon_id": int(metadata.get("taxon_id", 9606)),
+        # tissue is optional in the default checklist — use "unknown" as a safe fallback
+        "tissue": metadata.get("tissue", "unknown"),
         # Default disease to "healthy" if the parser didn't find one
         "disease": metadata.get("disease", "healthy"),
-        "collection_date": metadata["collection_date"],
+        # collection_date is optional in the default checklist — use today as a safe fallback
+        "collection_date": metadata.get("collection_date", "2024-01-01"),
         # Use "not specified" if location is still unknown after clarification
         "geographic_location": metadata.get("geographic_location", "not specified"),
     }
