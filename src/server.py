@@ -3,8 +3,12 @@
 # Start with: uvicorn src.server:app --reload
 
 import httpx
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import ValidationError
+
+# Load .env into the process environment so AAP_TOKEN is available to tools
+load_dotenv()
 
 from src.tools.fetch_tool import TOOL_DESCRIPTION as FETCH_DESC
 from src.tools.fetch_tool import TOOL_NAME as FETCH_NAME

@@ -91,22 +91,24 @@ async def run_submit_tool(arguments: dict) -> dict:
             "Set it to your EMBL-EBI AAP Bearer token before submitting."
         )
 
-    # Build the BioSamples JSON submission format
-    # BioSamples expects characteristics as lists of {text} objects
+    # BioSamples HAL+JSON submission format — must match the API spec exactly
+    # The 'release' field is required — without it the API returns 400
     payload = {
-        # Sample display name
+        # Sample display name — shown in the BioSamples browser
         "name": request.name,
-        # Characteristics dict — each value is a list of text objects
+        # Release date in ISO 8601 with time and Z suffix — make it public immediately
+        "release": f"{request.collection_date}T00:00:00Z",
+        # Characteristics dict — each value is a list with at least one {text} object
         "characteristics": {
-            # Organism with NCBI taxonomy reference
+            # Organism links to NCBI Taxonomy via ontologyTerms for proper indexing
             "organism": [{"text": request.organism, "ontologyTerms": [f"http://purl.obolibrary.org/obo/NCBITaxon_{request.taxon_id}"]}],
-            # Tissue attribute
+            # Tissue type — free text, no ontology required
             "tissue": [{"text": request.tissue}],
-            # Disease attribute
-            "disease or disorder": [{"text": request.disease}],
-            # Collection date as a text attribute
+            # Disease state — use "healthy" if no disease association
+            "disease": [{"text": request.disease}],
+            # Collection date stored as a characteristic as well as used for release
             "collection date": [{"text": request.collection_date}],
-            # Geographic location
+            # Geographic location — the API expects this exact attribute name
             "geographic location (country and/or sea)": [{"text": request.geographic_location}],
         },
     }

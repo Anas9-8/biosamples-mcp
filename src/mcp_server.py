@@ -5,7 +5,11 @@
 
 from typing import Optional
 
+from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
+
+# Load .env so AAP_TOKEN is available when the submit tool runs
+load_dotenv()
 
 from src.tools.fetch_tool import run_fetch_tool
 

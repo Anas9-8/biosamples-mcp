@@ -97,10 +97,12 @@ async def submit_sample(metadata: dict, token: str) -> str:
     Requires a valid AAP token — get one from https://aai.ebi.ac.uk.
     """
 
-    # Set up auth header with the caller's Bearer token
+    # Send as plain JSON but tell the API we can receive HAL+JSON back
+    # Using application/hal+json as Content-Type causes a 415 — the API only accepts application/json
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
+        "Accept": "application/hal+json",
     }
 
     # Post the metadata to the BioSamples submission endpoint
