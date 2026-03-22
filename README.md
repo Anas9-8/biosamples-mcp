@@ -8,6 +8,36 @@ A production-ready MCP (Model Context Protocol) server that makes the EMBL-EBI B
 
 A professional Streamlit UI provides a visual interface for all 5 MCP tools — useful for demos, interviews, and exploring the BioSamples database without writing any code.
 
+### Home
+
+![Home](screenshots/home.png)
+
+Overview of available tools and live server status.
+
+### Search Samples
+
+![Search](screenshots/search.png)
+
+Keyword search across the EMBL-EBI BioSamples database with clickable accession links.
+
+### Fetch Sample Details
+
+![Fetch](screenshots/fetch.png)
+
+Retrieve complete metadata for any BioSamples accession.
+
+### AI-Assisted Submission
+
+![AI Submit](screenshots/ai_submit.png)
+
+Submit samples from plain English descriptions with automatic metadata extraction and checklist validation.
+
+### Natural Language Search
+
+![NL Search](screenshots/nl_search.png)
+
+Query samples using conversational language — the server parses filters automatically and shows the interpretation alongside the results.
+
 ### Quick Start with UI
 
 ```bash
@@ -19,12 +49,6 @@ streamlit run ui/app.py
 ```
 
 Open http://localhost:8501 in your browser.
-
-The UI includes four pages:
-- **Search Samples** — keyword search with clickable result links
-- **Fetch Sample** — full metadata view for any accession
-- **AI-Assisted Submission** — plain-text description → automatic extraction → clarification → submission
-- **Natural Language Search** — plain English query → interpreted filters → structured results
 
 ## Inspiration
 
