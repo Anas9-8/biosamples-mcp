@@ -2,15 +2,37 @@
 
 ![Python 3.11](https://img.shields.io/badge/python-3.11-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-green) ![MCP](https://img.shields.io/badge/MCP-enabled-purple) ![Docker](https://img.shields.io/badge/docker-ready-blue) ![BioSamples API](https://img.shields.io/badge/BioSamples-EBI-orange) ![Streamlit](https://img.shields.io/badge/Streamlit-UI-red)
 
-A production-ready MCP server that connects AI agents to the EMBL-EBI BioSamples database — enabling intelligent biological sample search, metadata validation, and submission through a clean tool interface.
+An MCP server that gives AI agents structured, traceable access to the EMBL-EBI BioSamples database. Search, fetch, and submit biological sample metadata without touching a web browser.
+
+## Table of Contents
+
+- [Why This Project Matters](#why-this-project-matters)
+- [System Architecture](#system-architecture)
+  - [Diagram 1 - System Overview](#diagram-1--system-overview)
+  - [Diagram 2 - Submission Workflow](#diagram-2--ai-assisted-submission-workflow)
+  - [Diagram 3 - File Structure](#diagram-3--repository-file-structure)
+- [Live Demo Evidence](#live-demo-evidence)
+- [Web Interface](#web-interface)
+  - [Home Page](#home-page)
+  - [Architecture Page](#architecture-page)
+  - [Search Samples](#search-samples)
+  - [Fetch Sample Details](#fetch-sample-details)
+  - [AI-Assisted Submission](#ai-assisted-submission)
+  - [Natural Language Search](#natural-language-search)
+- [Quick Start](#quick-start)
+- [MCP Tools Reference](#mcp-tools-reference)
+- [Use Cases](#use-cases)
+- [Roadmap](#roadmap)
+- [Tech Stack](#tech-stack)
+- [Local Development](#local-development)
 
 ## Why This Project Matters
 
-Biological sample metadata stored in public repositories like EMBL-EBI BioSamples is rich but difficult to access programmatically. Researchers at hospitals, pharmaceutical companies, and academic institutions spend significant time manually searching, validating, and submitting sample data through web interfaces — a process that does not scale.
+BioSamples holds metadata for millions of biological samples from labs and hospitals worldwide. The REST API works fine for direct queries, but AI agents cannot use it reliably, they need explicit tool schemas, defined inputs, and predictable outputs to avoid making things up.
 
-This project implements the Model Context Protocol (MCP) as a structured bridge between AI agents and the BioSamples REST API. By defining explicit tool schemas with validated inputs and outputs, it allows any LLM-based system to interact with BioSamples programmatically — without hallucinations, without manual data entry, and with full traceability back to the authoritative data source.
+This project wraps the BioSamples API in an MCP server. Each tool has a strict schema. Every response comes directly from the API. The smart submission tool adds a small NLP layer that extracts structured fields from plain English text, useful when a researcher wants to describe a sample in their own words rather than fill in a form.
 
-The server is not a prototype. Two biological samples (SAMEA122005222 and SAMEA122005223) were submitted live to the EMBL-EBI BioSamples database during development, confirming end-to-end functionality against the production API.
+Two samples were submitted to the production database during development: SAMEA122005222 and SAMEA122005223. Both are publicly visible on the EMBL-EBI website, which confirms the submission pipeline works against the real API.
 
 ## System Architecture
 
@@ -22,12 +44,12 @@ The following diagrams show how all components of the system connect and communi
 
 ![System Overview](screenshots/03_diagram_system.png)
 
-Key points:
-- Three client types connect to the server: Streamlit UI, LLM Agent (Claude Desktop), and REST clients
-- Two server transports: FastAPI REST (port 8000) for HTTP clients, FastMCP stdio for Claude Desktop
-- Five MCP tools handle all requests
-- Two AI modules (nlp_parser + checklist_validator) power the smart tools
-- All tools connect to the EMBL-EBI BioSamples REST API
+
+- Three client types: Streamlit UI on port 8501, Claude Desktop via stdio, and any REST client
+- FastAPI REST server (port 8000) handles HTTP traffic; FastMCP handles Claude Desktop
+- Five MCP tools, three standard and two AI-powered
+- nlp_parser.py and checklist_validator.py sit behind the two smart tools
+- Everything ultimately hits the EMBL-EBI BioSamples REST API
 
 ---
 
@@ -35,7 +57,7 @@ Key points:
 
 ![Submission Workflow](screenshots/04_diagram_workflow.png)
 
-Key points:
+
 - Step 1: User writes a plain English sample description
 - Step 2: nlp_parser.py extracts organism, tissue, disease, location, and date automatically
 - Step 3: checklist_validator.py checks required fields
@@ -50,19 +72,19 @@ Key points:
 
 ![File Structure](screenshots/05_diagram_files.png)
 
-Key points:
-- src/ — all server logic, tools, and AI modules
-- ui/ — Streamlit interface with 5 pages
-- tests/ — 21 automated tests, all passing
-- checklists/ — BioSamples validation JSON definitions
-- Dockerfile + docker-compose.yml — container deployment
-- .github/workflows/ — GitHub Actions CI pipeline
+
+- src/ contains the servers, tools, NLP parser, and checklist validator
+- ui/ has the Streamlit app and five page modules
+- 21 tests in tests/, all passing
+- checklists/ holds the two validation JSON files (default + human_sample)
+- Docker and docker-compose for one-command deployment
+- GitHub Actions CI runs on every push to main
 
 ---
 
 ## Live Demo Evidence
 
-The following samples were submitted to the EMBL-EBI BioSamples production database during development, confirming that the submission pipeline works end-to-end:
+These two samples were submitted to the real EMBL-EBI BioSamples database during development:
 
 | Accession | Description | Submitted via |
 |-----------|-------------|---------------|
@@ -96,10 +118,10 @@ Open http://localhost:8501 in your browser.
 
 ![Home Page](screenshots/01_home.png)
 
-Key points:
-- Shows live server connection status (green = online)
-- Displays all 5 available tools with descriptions
-- Quick demo button fetches SAMEA122005222 to verify server is connected and working
+
+- Server status indicator, green when the MCP server is reachable on port 8000
+- All five tools listed with one-line descriptions
+- Quick demo: click to fetch SAMEA122005222 and confirm the connection is live
 
 ---
 
@@ -107,10 +129,10 @@ Key points:
 
 ![Architecture Page](screenshots/02_architecture_full.png)
 
-Key points:
-- Three color-coded diagrams explain the full system
-- Interactive — rendered live in the browser
-- Suitable for technical presentations and interviews
+
+- Three color-coded diagrams covering system overview, submission workflow, and file structure
+- Rendered as live HTML in the browser, not static images
+- Works well in technical presentations and interview demos
 
 ---
 
@@ -118,11 +140,11 @@ Key points:
 
 ![Search Results](screenshots/06_search_results.png)
 
-Key points:
-- Keyword search across millions of BioSamples records
-- Results show accession, organism, and disease
-- Each accession links directly to EMBL-EBI website
-- Example query buttons for quick testing
+
+- Full-text keyword search across the BioSamples database
+- Results table with accession, organism, and disease columns
+- Accession IDs link straight to the EMBL-EBI record page
+- One-click example queries: "human", "blood", "liver"
 
 ---
 
@@ -130,11 +152,11 @@ Key points:
 
 ![Fetch Sample](screenshots/07_fetch_result.png)
 
-Key points:
-- Enter any BioSamples accession to retrieve full metadata
-- Two-column layout: basic info + biological attributes
-- Expandable raw characteristics section
-- Pre-loaded buttons for SAMEA122005222 and SAMEA122005223
+
+- Paste any accession to pull the full metadata record
+- Two-column layout separating basic info from biological attributes
+- Raw characteristics available in an expandable section
+- Buttons pre-loaded with SAMEA122005222 and SAMEA122005223 for quick testing
 
 ---
 
@@ -144,13 +166,13 @@ Key points:
 
 ![AI Submit Clarification](screenshots/09_ai_submit_clarification.png)
 
-Key points:
-- Describe a sample in plain English — no forms to fill
-- System automatically extracts all metadata fields
-- Two checklists: default (minimum) or human_sample (strict)
-- If fields are missing: targeted questions are shown
-- Once complete: sample is submitted and accession returned
-- Live proof: SAMEA122005222 and SAMEA122005223 were submitted this way
+
+- Write a sample description in plain English instead of filling out a form
+- The NLP parser pulls out organism, tissue, disease, location, and date automatically
+- Choose between default (minimum fields) or human_sample (stricter) checklist
+- Missing fields trigger specific clarification questions
+- Once everything checks out, the sample is submitted and the accession comes back
+- SAMEA122005222 and SAMEA122005223 were both submitted through this page
 
 ---
 
@@ -158,11 +180,11 @@ Key points:
 
 ![NL Search](screenshots/10_nl_search_results.png)
 
-Key points:
-- Search using plain English — no query syntax needed
-- System shows which filters it extracted from your query
-- Results include accession, organism, tissue, disease
-- Example query buttons for quick testing
+
+- Type a query in plain English, no special syntax
+- The server shows which filters it extracted (organism, tissue, disease, location)
+- Results come back with accession, organism, tissue, and disease columns
+- Example buttons: "human lung cancer", "human kidney biopsy Berlin 2022", "human blood COVID-19 Germany"
 
 ---
 
@@ -215,17 +237,17 @@ curl -X POST http://localhost:8000/tools/fetch_biosample/call \
 
 ## Use Cases
 
-Clinical research departments can use this server to programmatically search public sample datasets for cohort comparisons, reducing manual database queries and enabling AI-assisted literature-linked sample discovery.
+Hospital research teams often need to find public samples that match a patient cohort, same tissue, same disease, similar collection window. This server lets an AI assistant run those searches programmatically instead of clicking through the BioSamples web interface.
 
-Drug development teams can integrate this MCP server into their data pipelines to find relevant disease model samples, validate sample metadata quality, and submit new experimental samples to the global repository — all through a standardised AI tool interface.
+Pharma teams submitting experimental samples to public archives can use the smart submission tool to avoid filling in the same metadata form repeatedly. Describe the sample in plain English, answer any clarification questions, and the record is submitted.
 
-Research groups can connect LLM-based analysis assistants directly to BioSamples data without building custom API integrations. The MCP tool interface provides deterministic, hallucination-free access to authoritative biological data.
+Bioinformatics groups building AI-assisted analysis pipelines can connect this MCP server directly to their LLM layer. The tool schemas prevent hallucinated accessions and ensure every sample lookup returns real data.
 
-This project was independently developed as a working implementation of the EMBL-EBI GSoC 2026 project idea "Expose BioSamples Submission and Search Capabilities as MCP Tools for AI-Assisted Metadata Interaction" (Mentor: Dipayan Gupta). Reference: https://www.ebi.ac.uk/about/events/gsoc/
+This project started as an independent implementation of EMBL-EBI GSoC 2026 project idea #16 (Mentor: Dipayan Gupta), a good way to demonstrate the concept works before the coding period begins. Reference: https://www.ebi.ac.uk/about/events/gsoc/
 
 ## Roadmap
 
-The current implementation covers the core submission and search capabilities described in the project specification. Planned extensions include integration with the live BioSamples checklist API to replace the static JSON files, multi-turn conversational session management for complex submission workflows, rate-limit-aware caching for high-volume queries, and expansion to additional EMBL-EBI resources including ENA and ArrayExpress.
+The static checklist JSON files work but ideally the server should fetch them live from the BioSamples API so they stay up to date automatically. The clarification workflow is single-turn, a proper session store would make multi-step submissions cleaner. Response caching would help for repeated queries. The architecture extends naturally to other EMBL-EBI resources like ENA and ArrayExpress since the MCP tool pattern is the same.
 
 ## Tech Stack
 
