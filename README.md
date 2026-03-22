@@ -12,53 +12,53 @@ This project implements the Model Context Protocol (MCP) as a structured bridge 
 
 The server is not a prototype. Two biological samples (SAMEA122005222 and SAMEA122005223) were submitted live to the EMBL-EBI BioSamples database during development, confirming end-to-end functionality against the production API.
 
-## Architecture
+## System Architecture
 
-The system is organised in five layers. Each layer has a single responsibility. Full interactive diagrams with color coding are available in the Streamlit UI under **Architecture**.
+The following diagrams show how all components of the system connect and communicate. Each layer is color-coded: blue for clients, green for servers, orange for standard tools, red for AI-powered tools, purple for the intelligence layer, and gray for the external API.
 
-### System Overview
+---
+
+### Diagram 1 — System Overview
 
 ![System Overview](screenshots/03_diagram_system.png)
 
-### Layer 1 — Client Layer
-Three types of clients can connect to the server:
-- **Streamlit UI** (port 8501) — visual interface for demos
-- **LLM Agent** via Claude Desktop — AI agent using stdio transport
-- **REST Client** — direct curl or API calls over HTTP
+Key points:
+- Three client types connect to the server: Streamlit UI, LLM Agent (Claude Desktop), and REST clients
+- Two server transports: FastAPI REST (port 8000) for HTTP clients, FastMCP stdio for Claude Desktop
+- Five MCP tools handle all requests
+- Two AI modules (nlp_parser + checklist_validator) power the smart tools
+- All tools connect to the EMBL-EBI BioSamples REST API
 
-### Layer 2 — Server Layer
-Two server transports handle incoming requests:
-- **FastAPI REST Server** (port 8000) — handles HTTP clients. File: `src/server.py`
-- **FastMCP stdio Server** — handles Claude Desktop connections. File: `src/mcp_server.py`
+---
 
-### Layer 3 — Tools Layer
-Five MCP tools process all requests:
+### Diagram 2 — AI-Assisted Submission Workflow
 
-Standard tools:
-- `search_biosamples` — keyword search across BioSamples
-- `fetch_biosample` — retrieve full metadata by accession
-- `submit_biosample` — submit structured sample metadata
+![Submission Workflow](screenshots/04_diagram_workflow.png)
 
-AI-powered tools:
-- `smart_submit_biosample` — submit from plain English text
-- `natural_search_biosamples` — search using natural language
+Key points:
+- Step 1: User writes a plain English sample description
+- Step 2: nlp_parser.py extracts organism, tissue, disease, location, and date automatically
+- Step 3: checklist_validator.py checks required fields
+- Step 4: If fields are missing, clarification questions are returned to the user
+- Step 5: User answers are merged with extracted metadata
+- Step 6: Complete record is submitted to EMBL-EBI API
+- Step 7: Real BioSamples accession is returned
 
-### Layer 4 — Intelligence Layer
-Two modules power the AI-assisted tools:
-- `nlp_parser.py` — extracts organism, tissue, disease, location, and date from plain English descriptions
-- `checklist_validator.py` — validates extracted fields against BioSamples checklists and generates clarification questions for missing required fields
+---
 
-### Repository File Structure
+### Diagram 3 — Repository File Structure
 
 ![File Structure](screenshots/05_diagram_files.png)
 
-### Layer 5 — External API
-All tools ultimately call the EMBL-EBI BioSamples REST API:
-- `GET  /biosamples/samples?text={query}` — search
-- `GET  /biosamples/samples/{accession}` — fetch
-- `POST /biosamples/samples` — submit
-- Base URL: https://www.ebi.ac.uk/biosamples
-- Client file: `src/biosamples_client.py`
+Key points:
+- src/ — all server logic, tools, and AI modules
+- ui/ — Streamlit interface with 5 pages
+- tests/ — 21 automated tests, all passing
+- checklists/ — BioSamples validation JSON definitions
+- Dockerfile + docker-compose.yml — container deployment
+- .github/workflows/ — GitHub Actions CI pipeline
+
+---
 
 ## Live Demo Evidence
 
@@ -75,7 +75,7 @@ View live: https://www.ebi.ac.uk/biosamples/samples/SAMEA122005223
 
 ## Web Interface
 
-A professional Streamlit interface provides visual access to all five MCP tools. It is designed for live demonstrations, job interviews, and exploratory use of the BioSamples database without writing any code.
+The Streamlit interface provides visual access to all five MCP tools. The following screenshots show each page with a brief description of its key features.
 
 Start the interface:
 
@@ -96,33 +96,21 @@ Open http://localhost:8501 in your browser.
 
 ![Home Page](screenshots/01_home.png)
 
-The home page shows the server connection status, a summary of all five available tools, and a quick demo button that fetches a real BioSamples record (SAMEA122005222) to confirm the server is connected and working.
+Key points:
+- Shows live server connection status (green = online)
+- Displays all 5 available tools with descriptions
+- Quick demo button fetches SAMEA122005222 to verify server is connected and working
 
 ---
 
-### Architecture
+### Architecture Page
 
-![Architecture Overview](screenshots/02_architecture_full.png)
+![Architecture Page](screenshots/02_architecture_full.png)
 
-The Architecture page provides three interactive diagrams explaining how the system works:
-
-#### Diagram 1 — System Overview
-
-![System Overview](screenshots/03_diagram_system.png)
-
-Shows how the three client types (Streamlit UI, LLM Agent, REST Client) connect through two server transports (FastAPI REST and FastMCP stdio) to reach the five MCP tools and ultimately the EMBL-EBI BioSamples API. Each layer is color-coded: blue for clients, green for servers, orange and red for tools, purple for the intelligence layer, and gray for the external API.
-
-#### Diagram 2 — AI-Assisted Submission Workflow
-
-![Submission Workflow](screenshots/04_diagram_workflow.png)
-
-Shows the seven-step pipeline that processes a plain English sample description into a validated, submitted BioSamples record. The decision point shows where the system either asks clarification questions (if required fields are missing) or proceeds directly to submission (if all fields are present).
-
-#### Diagram 3 — Repository File Structure
-
-![File Structure](screenshots/05_diagram_files.png)
-
-Shows every file and folder in the repository with its purpose, color-coded by architectural layer to match Diagram 1.
+Key points:
+- Three color-coded diagrams explain the full system
+- Interactive — rendered live in the browser
+- Suitable for technical presentations and interviews
 
 ---
 
@@ -130,7 +118,11 @@ Shows every file and folder in the repository with its purpose, color-coded by a
 
 ![Search Results](screenshots/06_search_results.png)
 
-Keyword search across the EMBL-EBI BioSamples database. Returns up to 25 matching samples with accession IDs, organism names, and disease annotations. Each accession is a clickable link to the full record on the EMBL-EBI website. Example queries are provided for quick testing.
+Key points:
+- Keyword search across millions of BioSamples records
+- Results show accession, organism, and disease
+- Each accession links directly to EMBL-EBI website
+- Example query buttons for quick testing
 
 ---
 
@@ -138,7 +130,11 @@ Keyword search across the EMBL-EBI BioSamples database. Returns up to 25 matchin
 
 ![Fetch Sample](screenshots/07_fetch_result.png)
 
-Retrieves complete metadata for any BioSamples accession. Displays organism, tissue, disease, geographic location, collection date, submission date, and SRA accession in a structured two-column layout. An expandable section shows all raw characteristics returned by the API. The page includes one-click buttons to load the two samples submitted during development of this project (SAMEA122005222 and SAMEA122005223).
+Key points:
+- Enter any BioSamples accession to retrieve full metadata
+- Two-column layout: basic info + biological attributes
+- Expandable raw characteristics section
+- Pre-loaded buttons for SAMEA122005222 and SAMEA122005223
 
 ---
 
@@ -148,13 +144,13 @@ Retrieves complete metadata for any BioSamples accession. Displays organism, tis
 
 ![AI Submit Clarification](screenshots/09_ai_submit_clarification.png)
 
-The most distinctive feature of this project. The user describes a biological sample in plain English and the system automatically extracts structured metadata, validates it against a BioSamples checklist, and either submits the sample directly or asks targeted clarification questions for any missing required fields.
-
-The two screenshots above show:
-1. The submission form with example descriptions
-2. The clarification workflow — extracted metadata is shown on the left, and the missing fields are highlighted with specific questions for the user to answer
-
-Once the user provides the missing information, the system submits the complete record and returns the assigned BioSamples accession.
+Key points:
+- Describe a sample in plain English — no forms to fill
+- System automatically extracts all metadata fields
+- Two checklists: default (minimum) or human_sample (strict)
+- If fields are missing: targeted questions are shown
+- Once complete: sample is submitted and accession returned
+- Live proof: SAMEA122005222 and SAMEA122005223 were submitted this way
 
 ---
 
@@ -162,7 +158,13 @@ Once the user provides the missing information, the system submits the complete 
 
 ![NL Search](screenshots/10_nl_search_results.png)
 
-Search the BioSamples database using plain English queries. The system parses the query into structured filters (organism, tissue, disease, location) and shows the interpreted filters alongside the search results. This allows users to search without knowing the BioSamples query syntax.
+Key points:
+- Search using plain English — no query syntax needed
+- System shows which filters it extracted from your query
+- Results include accession, organism, tissue, disease
+- Example query buttons for quick testing
+
+---
 
 ## Quick Start
 
@@ -210,38 +212,6 @@ curl -X POST http://localhost:8000/tools/fetch_biosample/call \
   -H "Content-Type: application/json" \
   -d '{"accession": "SAMEA112654119"}'
 ```
-
-## AI-Assisted Submission Workflow
-
-![Submission Workflow](screenshots/04_diagram_workflow.png)
-
-The `smart_submit_biosample` tool processes plain English descriptions through a 7-step pipeline:
-
-**Step 1 — User Input.**
-The user provides a plain English description of the sample.
-Example: *"Human liver biopsy collected in London in 2023 from a patient with cirrhosis"*
-
-**Step 2 — Text Extraction** (`nlp_parser.py`).
-The NLP parser extracts structured metadata fields: organism, tissue, disease, geographic location, collection date.
-
-**Step 3 — Checklist Validation** (`checklist_validator.py`).
-The validator checks extracted fields against the selected BioSamples checklist:
-- `default` checklist: requires organism and taxon_id
-- `human_sample` checklist: requires organism, taxon_id, tissue, and collection_date
-
-**Step 4a — Clarification** (if fields are missing).
-If required fields are missing, the tool returns targeted questions to the user instead of submitting an incomplete record.
-Example questions: *"When was this sample collected? (YYYY-MM-DD)"*, *"What is the patient sex? (male/female/unknown)"*
-
-**Step 5 — Merge and Revalidate.**
-The user's answers are merged with the extracted metadata and the checklist validation runs again.
-
-**Step 6 — Submission.**
-Once all required fields are present, `submit_sample()` sends a POST request to the EMBL-EBI BioSamples API with the complete metadata in HAL+JSON format.
-
-**Step 7 — Success.**
-The EMBL-EBI API assigns a permanent accession identifier.
-Examples from this project: SAMEA122005222, SAMEA122005223
 
 ## Use Cases
 
