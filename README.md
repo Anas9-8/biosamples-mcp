@@ -14,56 +14,51 @@ The server is not a prototype. Two biological samples (SAMEA122005222 and SAMEA1
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Client Layer                         │
-│                                                         │
-│   Streamlit UI          LLM Agent        curl / API     │
-│   (port 8501)       (Claude Desktop)     (direct)       │
-└────────────┬───────────────┬─────────────────┬──────────┘
-             │               │                 │
-             └───────────────┴─────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────┐
-│                    Server Layer                         │
-│                                                         │
-│   FastAPI REST Server          FastMCP stdio Server     │
-│   (port 8000)                  (Claude Desktop)         │
-│                                                         │
-│   POST /tools/{name}/call      @mcp.tool() decorators   │
-└─────────────────────────────────────────────────────────┘
-                                    │
-              ┌─────────────────────┼───────────────┐
-              ▼                     ▼               ▼
-┌────────────────┐   ┌─────────────────┐   ┌──────────────────┐
-│  search        │   │  fetch          │   │  submit          │
-│  biosamples    │   │  biosample      │   │  biosample       │
-├────────────────┤   ├─────────────────┤   ├──────────────────┤
-│  smart_submit  │   │  natural_search │   │                  │
-│  biosample     │   │  biosamples     │   │                  │
-└────────────────┘   └─────────────────┘   └──────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────┐
-│                  Intelligence Layer                     │
-│                                                         │
-│   nlp_parser.py          checklist_validator.py         │
-│   (metadata extraction   (BioSamples checklist          │
-│    from plain text)       validation + clarification)   │
-└─────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────┐
-│              EMBL-EBI BioSamples API                    │
-│                                                         │
-│   GET  /biosamples/samples?text={query}   (search)      │
-│   GET  /biosamples/samples/{accession}    (fetch)       │
-│   POST /biosamples/samples                (submit)      │
-│                                                         │
-│   https://www.ebi.ac.uk/biosamples                      │
-└─────────────────────────────────────────────────────────┘
-```
+The system is organised in five layers. Each layer has a single responsibility. Full interactive diagrams with color coding are available in the Streamlit UI under **Architecture**.
+
+### System Overview
+
+![System Overview](screenshots/diagram_system.png)
+
+### Layer 1 — Client Layer
+Three types of clients can connect to the server:
+- **Streamlit UI** (port 8501) — visual interface for demos
+- **LLM Agent** via Claude Desktop — AI agent using stdio transport
+- **REST Client** — direct curl or API calls over HTTP
+
+### Layer 2 — Server Layer
+Two server transports handle incoming requests:
+- **FastAPI REST Server** (port 8000) — handles HTTP clients. File: `src/server.py`
+- **FastMCP stdio Server** — handles Claude Desktop connections. File: `src/mcp_server.py`
+
+### Layer 3 — Tools Layer
+Five MCP tools process all requests:
+
+Standard tools:
+- `search_biosamples` — keyword search across BioSamples
+- `fetch_biosample` — retrieve full metadata by accession
+- `submit_biosample` — submit structured sample metadata
+
+AI-powered tools:
+- `smart_submit_biosample` — submit from plain English text
+- `natural_search_biosamples` — search using natural language
+
+### Layer 4 — Intelligence Layer
+Two modules power the AI-assisted tools:
+- `nlp_parser.py` — extracts organism, tissue, disease, location, and date from plain English descriptions
+- `checklist_validator.py` — validates extracted fields against BioSamples checklists and generates clarification questions for missing required fields
+
+### Repository File Structure
+
+![File Structure](screenshots/diagram_files.png)
+
+### Layer 5 — External API
+All tools ultimately call the EMBL-EBI BioSamples REST API:
+- `GET  /biosamples/samples?text={query}` — search
+- `GET  /biosamples/samples/{accession}` — fetch
+- `POST /biosamples/samples` — submit
+- Base URL: https://www.ebi.ac.uk/biosamples
+- Client file: `src/biosamples_client.py`
 
 ## Live Demo Evidence
 
@@ -81,6 +76,12 @@ View live: https://www.ebi.ac.uk/biosamples/samples/SAMEA122005223
 ## Web Interface
 
 A professional Streamlit UI provides a visual interface for all 5 MCP tools — useful for demos, interviews, and exploring the BioSamples database without writing any code.
+
+### Architecture
+
+![Architecture](screenshots/architecture.png)
+
+The Architecture page provides a complete visual overview of how all system components connect and communicate, including the AI-assisted submission workflow and the full repository file structure.
 
 ### Home
 
@@ -173,41 +174,35 @@ curl -X POST http://localhost:8000/tools/fetch_biosample/call \
 
 ## AI-Assisted Submission Workflow
 
-```
-User input (plain English)
-"Human liver biopsy London 2023 with cirrhosis"
-              │
-              ▼
-       nlp_parser.py
-  extracts: organism, tissue,
-   disease, location, date
-              │
-              ▼
-  checklist_validator.py
-  checks required fields against
-       selected checklist
-              │
-         ┌────┴────┐
-         │         │
-         ▼         ▼
-      Missing    All fields
-       fields     present
-         │         │
-         ▼         ▼
-      Return    submit_sample()
-     questions  to EMBL-EBI API
-      to user         │
-         │            ▼
-         ▼      Returns accession
-       User       SAMEA......
-      answers
-         │
-         ▼
-  Merge + revalidate
-         │
-         ▼
-   submit_sample()
-```
+![Submission Workflow](screenshots/diagram_workflow.png)
+
+The `smart_submit_biosample` tool processes plain English descriptions through a 7-step pipeline:
+
+**Step 1 — User Input.**
+The user provides a plain English description of the sample.
+Example: *"Human liver biopsy collected in London in 2023 from a patient with cirrhosis"*
+
+**Step 2 — Text Extraction** (`nlp_parser.py`).
+The NLP parser extracts structured metadata fields: organism, tissue, disease, geographic location, collection date.
+
+**Step 3 — Checklist Validation** (`checklist_validator.py`).
+The validator checks extracted fields against the selected BioSamples checklist:
+- `default` checklist: requires organism and taxon_id
+- `human_sample` checklist: requires organism, taxon_id, tissue, and collection_date
+
+**Step 4a — Clarification** (if fields are missing).
+If required fields are missing, the tool returns targeted questions to the user instead of submitting an incomplete record.
+Example questions: *"When was this sample collected? (YYYY-MM-DD)"*, *"What is the patient sex? (male/female/unknown)"*
+
+**Step 5 — Merge and Revalidate.**
+The user's answers are merged with the extracted metadata and the checklist validation runs again.
+
+**Step 6 — Submission.**
+Once all required fields are present, `submit_sample()` sends a POST request to the EMBL-EBI BioSamples API with the complete metadata in HAL+JSON format.
+
+**Step 7 — Success.**
+The EMBL-EBI API assigns a permanent accession identifier.
+Examples from this project: SAMEA122005222, SAMEA122005223
 
 ## Use Cases
 
